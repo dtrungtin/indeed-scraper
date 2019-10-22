@@ -64,6 +64,8 @@ Apify.main(async () => {
                 '#debug': Apify.utils.createRequestDebugInfo(request),
             });
         },
+
+        maxRequestsPerCrawl: input.maxItems,
     });
 
     await basicCrawler.run();
