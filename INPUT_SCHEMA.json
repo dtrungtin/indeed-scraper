@@ -1,0 +1,15 @@
+{
+    "title": "Input schema for Actor Indeed Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "url": {
+            "title": "URL",
+            "type": "string",
+            "description": "What to search Indeed.com for",
+            "editor": "textfield",
+            "prefill": "https://www.indeed.com/"
+        }
+    },
+    "required": ["url"]
+}
