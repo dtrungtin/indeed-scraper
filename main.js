@@ -14,7 +14,7 @@ Apify.main(async () => {
     const requestQueue = await Apify.openRequestQueue();
 
     for (let index = 0; index < input.startURLs; index++) {
-        await requestQueue.addRequest({ url: input.startURLs[index], userData: { label: 'start' } });
+        await requestQueue.addRequest({ url: input.startURLs[index].url, userData: { label: 'start' } });
     }
 
     const basicCrawler = new Apify.BasicCrawler({
