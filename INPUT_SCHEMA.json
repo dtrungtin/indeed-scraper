@@ -8,20 +8,20 @@
             "type": "array",
             "editor": "requestListSources",
             "description": "List of URLs that will be scraped or crawled."
+        },
+        "maxItems": {
+            "title": "Max items",
+            "type": "integer",
+            "minimum": 1,
+            "description": "Limit of detail/product pages to be scraped"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "editor": "proxy",
+            "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
+            "prefill": { "useApifyProxy": true }
         }
-    },
-    "maxItems": {
-        "title": "Max items",
-        "type": "integer",
-        "minimum": 1,
-        "description": "Limit of detail/product pages to be scraped"
-    },
-    "proxyConfiguration": {
-        "title": "Proxy configuration",
-        "type": "object",
-        "editor": "proxy",
-        "description": "The best option is usually Automatic proxy. But you can also use your own proxies or no proxy",
-        "prefill": { "useApifyProxy": true }
     },
     "required": ["url"]
 }
