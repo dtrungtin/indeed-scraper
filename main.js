@@ -1,17 +1,23 @@
 const Apify = require('apify');
 const rp = require('request-promise');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const cheerio = require('cheerio');
+
+const { log } = Apify.utils;
 
 Apify.main(async () => {
     const input = await Apify.getInput();
+    log('Input:');
+    log(input);
 
-    if (!input || typeof (input.url) !== 'string') {
-        throw new Error("Invalid input, it needs to contain 'url' field.");
+    if (!input || !Array.isArray(input.startUrls) || input.startUrls.length > 0) {
+        throw new Error("Invalid input, it needs to contain at least one url in 'startUrls'.");
     }
 
     const requestQueue = await Apify.openRequestQueue();
-    await requestQueue.addRequest({ url: input.url, userData: { label: 'start' } });
+
+    for (let index = 0; index < input.startUrls; index++) {
+        await requestQueue.addRequest({ url: input.startUrls[index], userData: { label: 'start' } });
+    }
 
     const basicCrawler = new Apify.BasicCrawler({
         requestQueue,
@@ -32,7 +38,7 @@ Apify.main(async () => {
                 const jobLinks = $('.result');
                 for (let index = 1; index < jobLinks.length; index++) {
                     const jk = $(jobLinks[index]).attr('data-jk');
-                    await requestQueue.addRequest({ url: `https://vn.indeed.com/viewjob?jk=${jk}&from=vjs`, userData: { label: 'job', jobKey: jk } });
+                    await requestQueue.addRequest({ url: `https://vn.indeed.com/viewjob?jk=${jk}`, userData: { label: 'job', jobKey: jk } });
                 }
             } else if (request.userData.label === 'job') {
                 const body = await rp(request.url);
