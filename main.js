@@ -11,6 +11,10 @@ Apify.main(async () => {
         throw new Error("Invalid input, it needs to contain at least one url in 'startURLs'.");
     }
 
+    const dataset = await Apify.openDataset();
+    const { itemCount } = dataset;
+
+    let pagesOutputted = itemCount;
     const requestQueue = await Apify.openRequestQueue();
 
     for (let index = 0; index < input.startURLs; index++) {
@@ -55,6 +59,12 @@ Apify.main(async () => {
                 _.extend(result, extendedResult);
 
                 await Apify.pushData(result);
+
+                if (++pagesOutputted >= input.maxItems) {
+                    const msg = `Outputted ${pagesOutputted} pages, limit is ${input.maxItems} pages`;
+                    console.log(`Shutting down the crawler: ${msg}`);
+                    this.autoscaledPool.abort();
+                }
             }
         },
 
