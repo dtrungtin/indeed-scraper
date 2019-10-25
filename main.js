@@ -12,7 +12,7 @@ Apify.main(async () => {
     }
 
     const dataset = await Apify.openDataset();
-    const { itemCount } = dataset;
+    const { itemCount } = await dataset.getInfo();
 
     let pagesOutputted = itemCount;
     const requestQueue = await Apify.openRequestQueue();
@@ -23,7 +23,7 @@ Apify.main(async () => {
 
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
-        handlePageFunction: async ({ request, response, html, $ }) => {
+        handlePageFunction: async ({ request, autoscaledPool, $ }) => {
             if (request.userData.label === 'start' || request.userData.label === 'list') {
                 const content = $('meta[name=description]').attr('content').split(/\s+/)[0].replace('.', '').replace(',', '');
                 const pageCount = Math.floor(parseInt(content, 10) / 10);
@@ -63,7 +63,7 @@ Apify.main(async () => {
                 if (++pagesOutputted >= input.maxItems) {
                     const msg = `Outputted ${pagesOutputted} pages, limit is ${input.maxItems} pages`;
                     console.log(`Shutting down the crawler: ${msg}`);
-                    this.autoscaledPool.abort();
+                    autoscaledPool.abort();
                 }
             }
         },
