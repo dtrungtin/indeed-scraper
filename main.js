@@ -1,6 +1,6 @@
 const Apify = require('apify');
-const rp = require('request-promise');
-const cheerio = require('cheerio');
+const _ = require('underscore');
+const safeEval = require('safe-eval');
 
 Apify.main(async () => {
     const input = await Apify.getInput();
@@ -17,12 +17,10 @@ Apify.main(async () => {
         await requestQueue.addRequest({ url: input.startURLs[index].url, userData: { label: 'start' } });
     }
 
-    const basicCrawler = new Apify.BasicCrawler({
+    const crawler = new Apify.CheerioCrawler({
         requestQueue,
-        handleRequestFunction: async ({ request }) => {
+        handlePageFunction: async ({ request, response, html, $ }) => {
             if (request.userData.label === 'start' || request.userData.label === 'list') {
-                const body = await rp(request.url);
-                const $ = cheerio.load(body);
                 const content = $('meta[name=description]').attr('content').split(/\s+/)[0].replace('.', '').replace(',', '');
                 const pageCount = Math.floor(parseInt(content, 10) / 10);
 
@@ -39,20 +37,24 @@ Apify.main(async () => {
                     await requestQueue.addRequest({ url: `https://vn.indeed.com/viewjob?jk=${jk}`, userData: { label: 'job', jobKey: jk } });
                 }
             } else if (request.userData.label === 'job') {
-                const body = await rp(request.url);
-                const $ = cheerio.load(body);
                 const jobDesription = $('#jobDescriptionText').text();
                 const jobLocation = $('.jobsearch-JobMetadataHeader-iconLabel').text();
                 const jobTitle = $('.jobsearch-JobInfoHeader-title').text();
 
-                await Apify.pushData({
+                const extendedResult = safeEval(input.extendOutputFunction)($);
+
+                const result = {
                     url: request.url,
                     id: request.userData.jobKey,
                     positionName: jobTitle,
                     location: jobLocation,
                     description: jobDesription,
                     '#debug': Apify.utils.createRequestDebugInfo(request),
-                });
+                };
+
+                _.extend(result, extendedResult);
+
+                await Apify.pushData(result);
             }
         },
 
@@ -66,5 +68,5 @@ Apify.main(async () => {
         maxRequestsPerCrawl: input.maxItems,
     });
 
-    await basicCrawler.run();
+    await crawler.run();
 });
