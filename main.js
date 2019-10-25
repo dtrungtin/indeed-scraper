@@ -66,6 +66,7 @@ Apify.main(async () => {
         },
 
         maxRequestsPerCrawl: input.maxItems,
+        proxyConfiguration: input.proxyConfiguration,
     });
 
     await crawler.run();
