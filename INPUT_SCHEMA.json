@@ -3,7 +3,7 @@
     "type": "object",
     "schemaVersion": 1,
     "properties": {
-        "startURLs": {
+        "startUrls": {
             "title": "Start URLs",
             "type": "array",
             "editor": "requestListSources",
@@ -31,5 +31,5 @@
             "prefill": { "useApifyProxy": true }
         }
     },
-    "required": ["startURLs"]
+    "required": ["startUrls"]
 }

@@ -7,8 +7,20 @@ Apify.main(async () => {
     console.log('Input:');
     console.log(input);
 
-    if (!input || !Array.isArray(input.startURLs) || input.startURLs.length === 0) {
-        throw new Error("Invalid input, it needs to contain at least one url in 'startURLs'.");
+    if (!input || !Array.isArray(input.startUrls) || input.startUrls.length === 0) {
+        throw new Error("Invalid input, it needs to contain at least one url in 'startUrls'.");
+    }
+
+    let extendOutputFunction;
+    if (typeof input.extendOutputFunction === 'string' && input.extendOutputFunction.trim() !== '') {
+        try {
+            extendOutputFunction = safeEval(input.extendOutputFunction);
+        } catch (e) {
+            throw new Error(`'extendOutputFunction' is not valid Javascript! Error: ${e}`);
+        }
+        if (typeof extendOutputFunction !== 'function') {
+            throw new Error('extendOutputFunction is not a function! Please fix it or use just default ouput!');
+        }
     }
 
     const dataset = await Apify.openDataset();
@@ -17,8 +29,8 @@ Apify.main(async () => {
     let pagesOutputted = itemCount;
     const requestQueue = await Apify.openRequestQueue();
 
-    for (let index = 0; index < input.startURLs.length; index++) {
-        await requestQueue.addRequest({ url: input.startURLs[index].url, userData: { label: 'start' } });
+    for (let index = 0; index < input.startUrls.length; index++) {
+        await requestQueue.addRequest({ url: input.startUrls[index].url, userData: { label: 'start' } });
     }
 
     const crawler = new Apify.CheerioCrawler({
@@ -45,9 +57,7 @@ Apify.main(async () => {
                 const jobLocation = $('.jobsearch-JobMetadataHeader-iconLabel').text();
                 const jobTitle = $('.jobsearch-JobInfoHeader-title').text();
 
-                const extendedResult = safeEval(input.extendOutputFunction)($);
-
-                const result = {
+                const pageResult = {
                     url: request.url,
                     id: request.userData.jobKey,
                     positionName: jobTitle,
@@ -56,9 +66,12 @@ Apify.main(async () => {
                     '#debug': Apify.utils.createRequestDebugInfo(request),
                 };
 
-                _.extend(result, extendedResult);
+                if (extendOutputFunction) {
+                    const userResult = await extendOutputFunction($);
+                    _.extend(pageResult, userResult);
+                }
 
-                await Apify.pushData(result);
+                await Apify.pushData(pageResult);
 
                 if (++pagesOutputted >= input.maxItems) {
                     const msg = `Outputted ${pagesOutputted} pages, limit is ${input.maxItems} pages`;
